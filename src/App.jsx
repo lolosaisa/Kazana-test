@@ -12,6 +12,8 @@ function App() {
   const [status, setStatus] = useState("Idle ⏳");
   const [isPaying, setIsPaying] = useState(false);
   const [wallet, setWallet] = useState("");
+  const [nftDetails, setNftDetails] = useState(null);
+
 
   // 🔹 Prompt user to connect wallet
   async function connectWallet() {
@@ -123,6 +125,15 @@ function App() {
           IPFS_URI: metadataURI,
           Status: payStatus,
         });
+
+        setNftDetails({
+          buyer: wallet,
+          merchant: merchantAddress,
+          amount,
+          paymentId: payment.id,
+          ipfs: metadataURI,
+          txHash: txHash,
+});
       } else {
         setStatus("⚠️ Payment still pending...");
       }
@@ -137,6 +148,10 @@ function App() {
   return (
     <div style={{ fontFamily: "sans-serif", textAlign: "center", padding: "2rem" }}>
       <h1>Kazana Pay Test</h1>
+      <h1 style={{
+        background: "linear-gradient(90deg, #ff3300ff, #441810ff, #4e2b20ff)",
+        fontWeight: "bold"
+      }}>YOU NEED USDC 💵 TESTNETS!!</h1>
       <h2 style={{ fontFamily: "sans-serif", fontSize: "bold", textDecoration: "Red" }}>
         This website tests the logic of Kazana Pay plugin because you need to pay for a WordPress sandbox. <br /> FOR THE HACKATHON!!!
       </h2>
@@ -165,6 +180,7 @@ function App() {
           disabled={isPaying}
           style={{
             padding: "1rem 2rem",
+            marginBottom: "4rem",
             fontSize: "1rem",
             backgroundColor: "#1a73e8",
             color: "white",
@@ -175,6 +191,28 @@ function App() {
         >
           💸 {isPaying ? "Processing..." : "Pay with Base"}
         </button>
+      )}
+
+      {nftDetails && (
+        <div style={{ marginTop: "2rem", textAlign: "left", display: "inline-block" }}>
+          <h3>🎟️ NFT Receipt Details</h3>
+          <p><strong>Buyer:</strong> {nftDetails.buyer}</p>
+          <p><strong>Merchant:</strong> {nftDetails.merchant}</p>
+          <p><strong>Amount:</strong> {nftDetails.amount} USDC</p>
+          <p><strong>Payment ID:</strong> {nftDetails.paymentId}</p>
+          <p>
+            <strong>IPFS Metadata:</strong>{" "}
+            <a href={`https://ipfs.io/ipfs/${nftDetails.ipfs.replace("ipfs://", "")}`} target="_blank" rel="noopener noreferrer">
+              View on IPFS
+            </a>
+          </p>
+          <p>
+            <strong>Transaction:</strong>{" "}
+            <a href={`https://sepolia.basescan.org/tx/${nftDetails.txHash}`} target="_blank" rel="noopener noreferrer">
+              View on Base Explorer
+            </a>
+          </p>
+        </div>
       )}
     </div>
   );
