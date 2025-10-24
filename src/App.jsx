@@ -117,6 +117,7 @@ function App() {
   return (
     <div style={{ fontFamily: "sans-serif", textAlign: "center", padding: "2rem" }}>
       <h1>Kazana Pay Test</h1>
+      <h1 style={{ fontFamily: "sans-serif", fontSize: "bold", textDecorationColor: "Red" }}> This website tests the logic of kazana pay plugin because you need to pay for a wordpress sandbox. FOR THE HACKATHON!!!</h1>
       <p>{status}</p>
 
       {!wallet ? (
