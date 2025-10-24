@@ -3,9 +3,10 @@ import { BrowserProvider, Contract, ethers } from "ethers";
 import "./App.css";
 import { pay, getPaymentStatus } from "@base-org/account";
 import NFTReceiptABI from "./NFTReceiptABI.json";
+import lighthouse from '@lighthouse-web3/sdk'; // ✅ Using Lighthouse instead of nft.storage
 
 const contractAddress = "0x4CF66dD38Df708Ffc86BE841f179317541c5f74E";
-const merchantAddress = "0x59cA293560F3b4f92C16c26e01CA023E4577f295"; // your wallet
+const merchantAddress = "0x59cA293560F3b4f92C16c26e01CA023E4577f295"; 
 
 function App() {
   const [status, setStatus] = useState("Idle ⏳");
@@ -82,27 +83,46 @@ function App() {
 
       if (payStatus === "completed" || payment.success) {
         setStatus("✅ Payment completed! Minting NFT...");
+         // 3️⃣ Build metadata
+        const metadata = {
+          name: `KazanaPay Receipt #${payment.id}`,
+          description: `Proof of purchase for order #${payment.id} via Kazana Pay.`,
+          attributes: [
+            { trait_type: "Buyer", value: wallet },
+            { trait_type: "Merchant", value: merchantAddress },
+            { trait_type: "Amount (USDC)", value: amount },
+            { trait_type: "Payment ID", value: payment.id },
+            { trait_type: "Status", value: payStatus },
+            { trait_type: "Network", value: "Base Testnet" },
+            { trait_type: "Timestamp", value: new Date().toISOString() },
+          ],
+        };
 
-        
-        
+        console.log("🧾 Metadata created:", metadata);
 
-        // 3️⃣ Prepare mint data
-        // const amountWei = ethers.utils.parseEther(amount.toString());
-        // const txHash = payment.txHash || "mock_tx_hash";
-        // const orderId = payment.id || "mock_order_id";
-        // const metadataURI = "ipfs://example_receipt_metadata";
-        //const amountUSDC = payment.amount; // already a string
+        // 4️⃣ Upload metadata to IPFS using Lighthouse
+        const apiKey = import.meta.env.VITE_LIGHTHOUSE_API_KEY;
+        const blob = new Blob([JSON.stringify(metadata)], { type: "application/json" });
+        const uploadResponse = await lighthouse.uploadBuffer(blob, apiKey);
+        const cid = uploadResponse.data.Hash;
+        const metadataURI = `ipfs://${cid}`;
+        console.log("📦 Metadata uploaded to IPFS via Lighthouse:", metadataURI);
 
-
+        // 5️⃣ Mint NFT Receipt
         const amountUSDC = BigInt(Math.floor(Number(payment.amount) * 1e6));
+        const txHash = payment.id || "mock_tx_hash";
+        const orderId = payment.id;
 
-        const txHash = payment.id || "mock_tx_hash"; // id from Base Pay
-        const orderId = payment.id; // same id is fine for mock
-        const metadataURI = "ipfs://example_receipt_metadata";
-
-
-        // 4️⃣ Mint NFT Receipt
         await mintNFTReceipt(wallet, merchantAddress, amountUSDC, txHash, orderId, metadataURI);
+
+        console.table({
+          Buyer: wallet,
+          Merchant: merchantAddress,
+          Amount: amount,
+          PaymentID: payment.id,
+          IPFS_URI: metadataURI,
+          Status: payStatus,
+        });
       } else {
         setStatus("⚠️ Payment still pending...");
       }
@@ -117,7 +137,9 @@ function App() {
   return (
     <div style={{ fontFamily: "sans-serif", textAlign: "center", padding: "2rem" }}>
       <h1>Kazana Pay Test</h1>
-      <h1 style={{ fontFamily: "sans-serif", fontSize: "bold", textDecorationColor: "Red" }}> This website tests the logic of kazana pay plugin because you need to pay for a wordpress sandbox. FOR THE HACKATHON!!!</h1>
+      <h2 style={{ fontFamily: "sans-serif", fontSize: "bold", textDecoration: "Red" }}>
+        This website tests the logic of Kazana Pay plugin because you need to pay for a WordPress sandbox. <br /> FOR THE HACKATHON!!!
+      </h2>
       <p>{status}</p>
 
       {!wallet ? (
@@ -159,7 +181,6 @@ function App() {
 }
 
 export default App;
-
 
 
 
