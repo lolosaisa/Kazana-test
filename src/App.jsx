@@ -109,6 +109,7 @@ function App() {
         const cid = uploadResponse.data.Hash;
         const metadataURI = `ipfs://${cid}`;
         console.log("📦 Metadata uploaded to IPFS via Lighthouse:", metadataURI);
+        // Note: No need to pin separately, Lighthouse handles that.
 
         // 5️⃣ Mint NFT Receipt
         const amountUSDC = BigInt(Math.floor(Number(payment.amount) * 1e6));
